@@ -34,16 +34,22 @@ You can deploy this Next.js app to Vercel, Railway, or Render.
 **API Endpoint URL**:  
 `https://speakspace-backend-vercel.vercel.app/api/medication`
 
-## SpeakSpace Configuration
+## 🏆 SpeakSpace Hackathon Submission Details
 
-Copy these details into the SpeakSpace Custom Action configuration:
+### 1. API Endpoint
+**URL**: `https://speakspace-backend-vercel.vercel.app/api/medication`
+**Method**: `POST`
+**Authorization**: `x-api-key: demo-key` (Header)
 
-**1. Name**: Medication Restock & Reminder Workflow
-**2. Description**: Extracts medication details from a single user input, calculates dosage schedule, predicts restock date, and sends structured data to backend.
+### 2. Custom Action Configuration (Copy-Paste this into SpeakSpace)
 
-**3. Prompt Template** (PASTE EXACTLY):
+**Name**: Intelligent Medication Response
+**Description**: Analyzes voice notes for medication setup, restock calculations, and symptom severity tracking.
+**Action URL**: `https://speakspace-backend-vercel.vercel.app/api/medication`
+
+**Prompt Template**:
 ```text
-You are an Intelligent Medical Analysis Engine. 
+You are an Intelligent Medical Analysis Engine.
 Your goal is to detect the USER'S INTENT from their input and return a strict JSON object.
 
 Intent 1: NEW MEDICATION SETUP
@@ -53,7 +59,7 @@ Output Type: "new_medication"
 
 Intent 2: DAILY SYMPTOM FEEDBACK
 User says: "I feel dizzy..." or "Had a rash..." or "Feeling better..."
-Action: 
+Action:
 - Extract symptoms.
 - Categorize as "positive", "negative", or "allergy".
 - Assign Severity Score (0-5) where 0=none, 5=severe/allergy.
