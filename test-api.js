@@ -1,32 +1,58 @@
 
 async function test() {
-    const payload = {
-        medicine_name: "Amoxicillin",
-        dosage_per_intake: 1,
-        frequency_per_day: 3,
-        start_date: "2025-12-10",
-        end_date: "2025-12-20",
-        total_tablets_available: 20,
-        schedule_times: ["08:00", "14:00", "20:00"],
-        notes: "Take after food",
-        predicted_restock_date: null // Testing api calculation fallback
-    };
+    const url = 'https://speakspace-backend-vercel.vercel.app/api/medication'; // Live URL
 
+    console.log("--- TEST 1: New Medication Setup ---");
+    const setupPayload = {
+        type: "new_medication",
+        data: {
+            medicine_name: "Azithromycin",
+            dosage_per_intake: 1,
+            frequency_per_day: 1,
+            start_date: "2025-12-10",
+            total_tablets_available: 5
+        }
+    };
+    await send(url, setupPayload);
+
+    console.log("\n--- TEST 2: Daily Feedback (Negative) ---");
+    const feedbackPayload = {
+        type: "daily_feedback",
+        data: {
+            medicine_name: "Azithromycin",
+            symptoms: ["dizziness", "itching"],
+            category: "negative",
+            severity_score: 3,
+            notes: "Felt dizzy 30 mins after taking."
+        }
+    };
+    await send(url, feedbackPayload);
+
+    console.log("\n--- TEST 3: Allergy Alert (CRITICAL) ---");
+    const allergyPayload = {
+        type: "daily_feedback",
+        data: {
+            medicine_name: "Penicillin",
+            symptoms: ["severe swelling", "difficulty breathing"],
+            category: "allergy",
+            severity_score: 5,
+            notes: "Emergency."
+        }
+    };
+    await send(url, allergyPayload);
+}
+
+async function send(url, payload) {
     try {
-        const res = await fetch('http://localhost:3000/api/medication', {
+        const res = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': 'demo-key'
-            },
+            headers: { 'Content-Type': 'application/json', 'x-api-key': 'demo-key' },
             body: JSON.stringify(payload)
         });
-
-        console.log('Status:', res.status);
         const data = await res.json();
-        console.log('Response:', JSON.stringify(data, null, 2));
-    } catch (err) {
-        console.error('Fetch error:', err);
+        console.log("Response:", JSON.stringify(data, null, 2));
+    } catch (e) {
+        console.error("Error:", e);
     }
 }
 

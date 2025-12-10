@@ -32,7 +32,7 @@ You can deploy this Next.js app to Vercel, Railway, or Render.
 4. Deploy.
 
 **API Endpoint URL**:  
-`https://<your-project-url>/api/medication`
+`https://speakspace-backend-vercel.vercel.app/api/medication`
 
 ## SpeakSpace Configuration
 
@@ -43,37 +43,51 @@ Copy these details into the SpeakSpace Custom Action configuration:
 
 **3. Prompt Template** (PASTE EXACTLY):
 ```text
-You are a strict medical data extraction engine. The user will enter all medication details in one single sentence or paragraph. Extract and compute the following fields and return ONLY a clean JSON object with no explanation.
+You are an Intelligent Medical Analysis Engine. 
+Your goal is to detect the USER'S INTENT from their input and return a strict JSON object.
 
-Required fields to extract:
-- medicine_name
-- dosage_per_intake (number of tablets per dose)
-- frequency_per_day (1, 2, 3…)
-- start_date
-- end_date
-- total_tablets_available
-- schedule_times (explicit times if given)
-- notes (any extra info)
+Intent 1: NEW MEDICATION SETUP
+User says: "I need to take Amoxicillin..." or "Start taking..."
+Action: Extract dosage, frequency, start/end dates, tablets available.
+Output Type: "new_medication"
 
-Restock Calculation Logic:
-1. total_days = number of days between start_date and end_date (inclusive)
-2. total_needed = total_days * frequency_per_day * dosage_per_intake
-3. tablets_remaining = total_tablets_available – tablets_consumed_so_far
-4. predicted_restock_date = date when tablets_remaining becomes zero (based on consumption rate)
+Intent 2: DAILY SYMPTOM FEEDBACK
+User says: "I feel dizzy..." or "Had a rash..." or "Feeling better..."
+Action: 
+- Extract symptoms.
+- Categorize as "positive", "negative", or "allergy".
+- Assign Severity Score (0-5) where 0=none, 5=severe/allergy.
+- Extract medicine name if mentioned.
+Output Type: "daily_feedback"
 
-If any field is missing, return null for that field.
+--- OUTPUT FORMAT (JSON ONLY) ---
 
-Final Output Format:
+IF NEW MEDICATION:
 {
-  "medicine_name": "",
-  "dosage_per_intake": "",
-  "frequency_per_day": "",
-  "start_date": "",
-  "end_date": "",
-  "total_tablets_available": "",
-  "schedule_times": [],
-  "notes": "",
-  "predicted_restock_date": ""
+  "type": "new_medication",
+  "data": {
+    "medicine_name": "string",
+    "dosage_per_intake": number,
+    "frequency_per_day": number,
+    "start_date": "YYYY-MM-DD",
+    "end_date": "YYYY-MM-DD",
+    "total_tablets_available": number,
+    "schedule_times": ["HH:MM"],
+    "notes": "string",
+    "predicted_restock_date": "YYYY-MM-DD" (calculate if sufficient data)
+  }
+}
+
+IF DAILY FEEDBACK:
+{
+  "type": "daily_feedback",
+  "data": {
+    "medicine_name": "string (or null)",
+    "symptoms": ["symptom1", "symptom2"],
+    "category": "positive" | "negative" | "allergy",
+    "severity_score": number (0-5),
+    "notes": "string"
+  }
 }
 
 User Input:
@@ -81,7 +95,7 @@ $PROMPT
 ```
 
 **4. Notes**: Select "User Selects Note"
-**5. API URL**: Your deployed URL (e.g., `https://your-app.vercel.app/api/medication`)
+**5. API URL**: `https://speakspace-backend-vercel.vercel.app/api/medication`
 **6. Authorization**:
    - Header: `x-api-key`
    - Value: `demo-key` (or your configured key)
