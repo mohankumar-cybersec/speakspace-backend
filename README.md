@@ -34,74 +34,57 @@ You can deploy this Next.js app to Vercel, Railway, or Render.
 **API Endpoint URL**:  
 `https://speakspace-backend-vercel.vercel.app/api/medication`
 
-## 🏆 SpeakSpace Hackathon Submission Details
+### 🟢 Hackathon Submission Details
 
-### 1. API Endpoint
-**URL**: `https://speakspace-backend-vercel.vercel.app/api/medication`
-**Method**: `POST`
-**Authorization**: `x-api-key: demo-key` (Header)
+**1. API Endpoint**
+\`\`\`
+https://speakspace-backend-vercel.vercel.app/api/pregnancy
+\`\`\`
 
-### 2. Custom Action Configuration (Copy-Paste this into SpeakSpace)
+**2. Prompt Template (Copy & Paste into SpeakSpace)**
+\`\`\`text
+You are 'LifeGuard', a Maternal Health AI.
+Analyze the user's input to detect the INTENT.
+Output strict JSON.
 
-**Name**: Intelligent Medication Response
-**Description**: Analyzes voice notes for medication setup, restock calculations, and symptom severity tracking.
-**Action URL**: `https://speakspace-backend-vercel.vercel.app/api/medication`
-
-**Prompt Template**:
-```text
-You are an Intelligent Medical Analysis Engine.
-Your goal is to detect the USER'S INTENT from their input and return a strict JSON object.
-
-Intent 1: NEW MEDICATION SETUP
-User says: "I need to take Amoxicillin..." or "Start taking..."
-Action: Extract dosage, frequency, start/end dates, tablets available.
-Output Type: "new_medication"
-
-Intent 2: DAILY SYMPTOM FEEDBACK
-User says: "I feel dizzy..." or "Had a rash..." or "Feeling better..."
-Action:
-- Extract symptoms.
-- Categorize as "positive", "negative", or "allergy".
-- Assign Severity Score (0-5) where 0=none, 5=severe/allergy.
-- Extract medicine name if mentioned.
-Output Type: "daily_feedback"
-
---- OUTPUT FORMAT (JSON ONLY) ---
-
-IF NEW MEDICATION:
+INTENT 1: SETUP
+User says: "I am pregnant, 24 weeks..." or "Start taking Prenatal vitamins..."
+Output:
 {
-  "type": "new_medication",
+  "type": "setup",
   "data": {
-    "medicine_name": "string",
-    "dosage_per_intake": number,
-    "frequency_per_day": number,
-    "start_date": "YYYY-MM-DD",
-    "end_date": "YYYY-MM-DD",
-    "total_tablets_available": number,
-    "schedule_times": ["HH:MM"],
-    "notes": "string",
-    "predicted_restock_date": "YYYY-MM-DD" (calculate if sufficient data)
+    "name": "Jane Doe",
+    "current_week": number,
+    "edd": "YYYY-MM-DD",
+    "doctor_name": "Dr. Name",
+    "doctor_phone": "Phone",
+    "medicine": { "name": "Drug Name", "freq": number }
   }
 }
 
-IF DAILY FEEDBACK:
+INTENT 2: DAILY LOG
+User says: "Felt baby kick", "have headache", "took meds"
+Output:
 {
-  "type": "daily_feedback",
+  "type": "daily_log",
   "data": {
-    "medicine_name": "string (or null)",
-    "symptoms": ["symptom1", "symptom2"],
-    "category": "positive" | "negative" | "allergy",
-    "severity_score": number (0-5),
+    "symptoms": ["list", "of", "symptoms"],
+    "severity": number (1-10),
+    "fetal_movement": "normal" | "reduced" | "none",
+    "bp_systolic": number (optional),
     "notes": "string"
   }
 }
 
-User Input:
-$PROMPT
-```
+INTENT 3: DOUBT
+User says: "Is it normal to feel..." or "I have a pain..."
+Output:
+{
+  "type": "doubt",
+  "data": { "text": "User's full question" }
+}
+\`\`\`
 
-**4. Notes**: Select "User Selects Note"
-**5. API URL**: `https://speakspace-backend-vercel.vercel.app/api/medication`
-**6. Authorization**:
-   - Header: `x-api-key`
-   - Value: `demo-key` (or your configured key)
+**3. Headers**
+*   Key: `x-api-key`
+*   Value: `demo-key`
