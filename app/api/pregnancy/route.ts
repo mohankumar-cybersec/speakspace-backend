@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
                 // Async: Trigger real call
                 try {
                     await TwilioClient.triggerCallWithTTS(
-                        "+919360191723", // Target Phone
+                        "+919944649978", // Target Phone
                         "Priya",
                         log.symptoms.join(", ")
                     );
