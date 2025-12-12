@@ -131,15 +131,23 @@ export async function POST(request: NextRequest) {
                 });
             }
 
-            // TIER 2: MODERATE (Score 3-4) -> EMAIL DOCTOR
+            // TIER 2: MODERATE (Score 3-4) -> SMS to DOCTOR
             if (analysis.score >= 3) {
+                // Use Twilio SMS because Render blocks SMTP (Email)
+                TwilioClient.sendSMS(
+                    "+919944649978", // Doctor Phone (Verified)
+                    `⚠️ LifeGuard Moderate Alert: Patient Priya reported ${log.symptoms.join(", ")}. Severity: ${analysis.score}/5.`
+                );
+
+                /* 
                 EmailService.sendAlert(
-                    "mohankumar.cyber25@gmail.com", // Doctor Email
+                    "mohankumar.cyber25@gmail.com", 
                     "Dr. Mohan",
                     "Priya",
                     log.symptoms.join(", "),
                     analysis.score
-                );
+                ); 
+                */
 
                 return NextResponse.json({
                     status: 'success',

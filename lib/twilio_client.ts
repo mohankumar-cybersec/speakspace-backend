@@ -32,5 +32,30 @@ export const TwilioClient = {
             console.log("⚠️ [SIMULATION FALLBACK] Twilio Error caught. Logging success for UI.");
             // We suppress error to keep the App UI Green
         }
+    },
+
+    sendSMS: async (to: string, message: string) => {
+        const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+        const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+        const FROM_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+
+        if (!ACCOUNT_SID || !AUTH_TOKEN || !FROM_NUMBER) {
+            console.log("⚠️ TWILIO_KEYS not set. Cannot send SMS to " + to);
+            return;
+        }
+
+        const client = twilio(ACCOUNT_SID, AUTH_TOKEN);
+        console.log(`💬 Sending Twilio SMS to ${to}...`);
+
+        try {
+            const msg = await client.messages.create({
+                body: message,
+                from: FROM_NUMBER,
+                to: to
+            });
+            console.log("✅ SMS Sent:", msg.sid);
+        } catch (error: any) {
+            console.error("Twilio SMS Failed:", error.message);
+        }
     }
 };
