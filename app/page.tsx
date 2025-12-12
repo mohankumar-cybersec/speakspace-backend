@@ -5,7 +5,7 @@ import { useState } from 'react';
 // --- VISUAL COMPONENTS ---
 
 // 1. EMERGENCY OVERLAY (Simulation)
-const EmergencyOverlay = ({ data, onDismiss }: { data: any, onDismiss: () => void }) => {
+const EmergencyOverlay = ({ data, doctorDetails, onDismiss }: { data: any, doctorDetails: any, onDismiss: () => void }) => {
   if (!data) return null;
   return (
     <div className="fixed inset-0 z-50 bg-red-600 flex flex-col items-center justify-center animate-pulse">
@@ -14,7 +14,9 @@ const EmergencyOverlay = ({ data, onDismiss }: { data: any, onDismiss: () => voi
           <span className="text-4xl">📞</span>
         </div>
         <h1 className="text-3xl font-black text-red-600 mb-2">CONNECTING...</h1>
-        <p className="text-xl font-bold text-slate-800">Dr. {data.doctor_phone}</p>
+        <p className="text-xl font-bold text-slate-800">
+          {doctorDetails ? `Dr. ${doctorDetails.name || 'Who'} (${doctorDetails.phone})` : `Dr. ${data.doctor_phone}`}
+        </p>
         <div className="my-6 p-4 bg-red-50 border border-red-200 rounded-xl text-left">
           <p className="text-xs font-bold text-red-400 uppercase">Emergency Reason</p>
           <p className="text-lg font-bold text-red-900">{data.reason}</p>
@@ -126,7 +128,7 @@ export default function PregnancyHub() {
 
   return (
     <main className="min-h-screen bg-pink-50 font-sans text-slate-900 p-4 md:p-8">
-      {emergencyData && <EmergencyOverlay data={emergencyData} onDismiss={() => setEmergencyData(null)} />}
+      {emergencyData && <EmergencyOverlay data={emergencyData} doctorDetails={profile ? { name: profile.doctor_name, phone: profile.doctor_phone } : null} onDismiss={() => setEmergencyData(null)} />}
 
       <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden min-h-[800px] flex flex-col">
         {/* HEADER */}

@@ -33,22 +33,38 @@ export const MedicalRules = {
     /**
      * Checks if symptoms indicate an EMERGENCY
      */
-    isEmergency: (symptoms: string[], severity: number, fetalMovement: string, bpSystolic?: number) => {
-        // Rule 1: Preeclampsia Risk
-        if (bpSystolic && bpSystolic >= 160) return { isEmergency: true, reason: "CRITICAL BP: Risk of Preeclampsia" };
+    /**
+     * Analyzes symptoms to determine Severity Score (0-5)
+     * 0-2: Safe/Warning
+     * 3-4: Moderate (Email Doctor)
+     * 5: Critical (Call Doctor)
+     */
+    analyzeSeverity: (symptoms: string[], reportedSeverity: number, fetalMovement: string, bpSystolic?: number) => {
+        // LEVEL 5: CRITICAL EMERGENCY
+        // 1. BP Check
+        if (bpSystolic && bpSystolic >= 160) return { score: 5, reason: "CRITICAL BP (>160): Preeclampsia Risk" };
 
-        // Rule 2: Physical Trauma
-        const dangerKeywords = ['bleeding', 'water break', 'severe cramps', 'vision blur', 'fainted'];
-        const detectedDanger = symptoms.find(s => dangerKeywords.some(k => s.toLowerCase().includes(k)));
-        if (detectedDanger) return { isEmergency: true, reason: `DANGER SIGN: ${detectedDanger.toUpperCase()}` };
+        // 2. Critical Keywords
+        const criticalKeywords = ['bleed', 'water', 'vision', 'blur', 'faint', 'seizure', 'unconscious'];
+        const criticalMatch = symptoms.find(s => criticalKeywords.some(k => s.toLowerCase().includes(k)));
+        if (criticalMatch) return { score: 5, reason: `CRITICAL SYMPTOM: ${criticalMatch.toUpperCase()}` };
 
-        // Rule 3: Fetal Distress
-        if (fetalMovement === 'none') return { isEmergency: true, reason: "NO FETAL MOVEMENT DETECTED" };
+        // 3. Fetal Distress
+        if (fetalMovement === 'none') return { score: 5, reason: "NO FETAL MOVEMENT DETECTED" };
 
-        // Rule 4: Severe Pain
-        if (severity >= 8) return { isEmergency: true, reason: "SEVERE PAIN THRESHOLD EXCEEDED" };
+        // LEVEL 4: SERIOUS (High Severity or Specific Pain)
+        const seriousKeywords = ['cramp', 'fever', 'swelling', 'vomit'];
+        const seriousMatch = symptoms.find(s => seriousKeywords.some(k => s.toLowerCase().includes(k)));
 
-        return { isEmergency: false, reason: null };
+        if (seriousMatch && reportedSeverity >= 5) return { score: 4, reason: `SERIOUS WARNING: Severe ${seriousMatch}` };
+        if (reportedSeverity >= 8) return { score: 4, reason: "HIGH PAIN THRESHOLD REPORTED" };
+
+        // LEVEL 3: MODERATE (Needs Attention)
+        if (seriousMatch) return { score: 3, reason: `MODERATE: Persistent ${seriousMatch}` };
+        if (reportedSeverity >= 6) return { score: 3, reason: "MODERATE PAIN REPORTED" };
+
+        // LEVEL 0-2: NORMAL/MILD
+        return { score: reportedSeverity > 2 ? 2 : 1, reason: "Routine Health Log" };
     },
 
     /**

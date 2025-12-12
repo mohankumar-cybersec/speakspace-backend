@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MedicalRules } from '../../../lib/medical_rules';
+import { EmailService } from '../../../lib/email_service';
+import { FonosterClient } from '../../../lib/fonoster_client';
 
 // --- TYPES ---
 interface SetupData {
@@ -77,22 +79,61 @@ export async function POST(request: NextRequest) {
         if (type === 'daily_log') {
             const log = data as DailyLogData;
 
-            // Check for EMERGENCY
-            const emergencyCheck = MedicalRules.isEmergency(
-                log.symptoms,
+            // 1. ANALYZE STATUS
+            const analysis = MedicalRules.analyzeSeverity(
+                log.symptoms || [],
                 log.severity,
                 log.fetal_movement,
                 log.bp_systolic
             );
 
-            if (emergencyCheck.isEmergency) {
+            // 2. TIERED RESPONSE SYSTEM
+
+            // TIER 3: CRITICAL (Score 5) -> CALL DOCTOR + RED SCREEN
+            if (analysis.score >= 5) {
+                // Async: Trigger real call (don't await if you want faster UI response, but user asked for it)
+                // We'll await briefly or fire-and-forget. Let's await to log success.
+                // In real hackathon demo, speed matters, so maybe fire-and-forget? 
+                // User said "once docter recives... he atten...". We trigger it here.
+                FonosterClient.triggerCallWithTTS(
+                    "9360191723", // Target Phone (User's Doctor from note, hardcoded for consistency check or fetch from DB if state existed)
+                    // Note: In a stateless API without DB, we can't easily fetch the doctor's phone from the SETUP phase unless it was passed in the log 
+                    // or we hardcode "Dr. Mohan" for the demo.
+                    // Let's use a safe fallback or the user's specific demo number.
+                    "Priya",
+                    log.symptoms.join(", ")
+                );
+
                 return NextResponse.json({
                     status: 'success',
                     action: 'INITIATE_EMERGENCY_CALL',
                     alert_level: 'CRITICAL',
                     data: {
-                        reason: emergencyCheck.reason,
-                        doctor_phone: "911" // In real app, fetch from profile
+                        reason: analysis.reason,
+                        doctor_phone: "911", // Frontend will show Dr Name if it has state
+                        severity_score: analysis.score
+                    }
+                });
+            }
+
+            // TIER 2: MODERATE (Score 3-4) -> EMAIL DOCTOR
+            if (analysis.score >= 3) {
+                EmailService.sendAlert(
+                    "mohankumar.cyber25@gmail.com", // Doctor Email from user note
+                    "Dr. Mohan",
+                    "Priya",
+                    log.symptoms.join(", "),
+                    analysis.score
+                );
+
+                return NextResponse.json({
+                    status: 'success',
+                    action: 'LOG_RECORDED', // Keep on monitor screen, maybe show alert
+                    alert_level: 'MODERATE',
+                    data: {
+                        message: `⚠️ Alert Sent to Doctor: ${analysis.reason}`,
+                        fetal_status: log.fetal_movement,
+                        severity_score: analysis.score
                     }
                 });
             }
