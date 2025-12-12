@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MedicalRules } from '../../../lib/medical_rules';
 import { EmailService } from '../../../lib/email_service';
-import { FonosterClient } from '../../../lib/fonoster_client';
+import { TwilioClient } from '../../../lib/twilio_client';
 
 // --- TYPES ---
 interface SetupData {
@@ -107,23 +107,16 @@ export async function POST(request: NextRequest) {
 
             // TIER 3: CRITICAL (Score 5) -> CALL DOCTOR + RED SCREEN
             if (analysis.score >= 5) {
-                // Async: Trigger real call (don't await if you want faster UI response, but user asked for it)
-                // We'll await briefly or fire-and-forget. Let's await to log success.
-                // In real hackathon demo, speed matters, so maybe fire-and-forget? 
-                // User said "once docter recives... he atten...". We trigger it here.
+                // Async: Trigger real call
                 try {
-                    FonosterClient.triggerCallWithTTS(
-                        "9360191723", // Target Phone (User's Doctor from note, hardcoded for consistency check or fetch from DB if state existed)
-                        // Note: In a stateless API without DB, we can't easily fetch the doctor's phone from the SETUP phase unless it was passed in the log 
-                        // or we hardcode "Dr. Mohan" for the demo.
-                        // Let's use a safe fallback or the user's specific demo number.
+                    await TwilioClient.triggerCallWithTTS(
+                        "9360191723", // Target Phone
                         "Priya",
                         log.symptoms.join(", ")
                     );
                 } catch (error) {
-                    console.error("Fonoster Call Failed:", error);
+                    console.error("Twilio Call Failed:", error);
                     console.log("⚠️ Falling back to Simulation Mode: Call logged.");
-                    // We suppress the error so the API doesn't crash 500
                 }
 
                 return NextResponse.json({
@@ -132,7 +125,7 @@ export async function POST(request: NextRequest) {
                     alert_level: 'CRITICAL',
                     data: {
                         reason: analysis.reason,
-                        doctor_phone: "911", // Frontend will show Dr Name if it has state
+                        doctor_phone: "911",
                         severity_score: analysis.score
                     }
                 });
@@ -141,7 +134,7 @@ export async function POST(request: NextRequest) {
             // TIER 2: MODERATE (Score 3-4) -> EMAIL DOCTOR
             if (analysis.score >= 3) {
                 EmailService.sendAlert(
-                    "mohankumar.cyber25@gmail.com", // Doctor Email from user note
+                    "mohankumar.cyber25@gmail.com", // Doctor Email
                     "Dr. Mohan",
                     "Priya",
                     log.symptoms.join(", "),
@@ -150,7 +143,7 @@ export async function POST(request: NextRequest) {
 
                 return NextResponse.json({
                     status: 'success',
-                    action: 'LOG_RECORDED', // Keep on monitor screen, maybe show alert
+                    action: 'LOG_RECORDED',
                     alert_level: 'MODERATE',
                     data: {
                         message: `⚠️ Alert Sent to Doctor: ${analysis.reason}`,
